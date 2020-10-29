@@ -2,6 +2,7 @@ import re
 from urllib.parse import urlparse
 import urllib
 from bs4 import BeautifulSoup
+import urllib.robotparser # Import for robots.txt implmentation
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -24,6 +25,7 @@ def extract_next_links(url, resp):
 def is_valid(url):
     try:
         parsed = urlparse(url)
+
         if parsed.scheme not in set(["http", "https"]):
             return False
 
@@ -34,6 +36,14 @@ def is_valid(url):
         # if the url's domain doesn't include any of these valid domains
         if not any(domain in parsed.netloc for domain in valid_domains):
             return False
+
+        robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
+        robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
+        robot_parser.read() # read in the robot.txt file 
+
+        if(robot_parser.can_fetch("*", url) == False): # if the crawler is not allowed to crawl the site return False
+            return False
+
         return not re.match(
             r".*\.|\/(css|js|bmp|gif|jpe?g|ico" # changed this line to check for either a '.' or a '/' instead
             + r"|png|tiff?|mid|mp2|mp3|mp4"
