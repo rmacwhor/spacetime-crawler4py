@@ -47,12 +47,12 @@ def is_valid(url):
         if not any(domain in parsed.netloc for domain in valid_domains):
             return False
 
-        robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
+        ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
         robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
         robot_parser.read() # read in the robot.txt file 
 
         if(robot_parser.can_fetch("*", url) == False): # if the crawler is not allowed to crawl the site return False
-            return False
+            return False '''
 
         return not re.match(
             r".*\.|\/(css|js|bmp|gif|jpe?g|ico" # changed this line to check for either a '.' or a '/' instead
