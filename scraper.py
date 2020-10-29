@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 import urllib
 from bs4 import BeautifulSoup
 import urllib.robotparser # Import for robots.txt implmentation
+import pickle
+import os.path
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -10,7 +12,7 @@ def scraper(url, resp):
 
 def extract_next_links(url, resp):
     # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS 'text/html'
-    if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text/html'):
+    if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text'):
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
@@ -27,9 +29,22 @@ def extract_next_links(url, resp):
 def count_words(text: str) -> int:
     ''' Given a string of text, counts the amount of words in the text (word being
         defined by the tokenizer) and modifies our stored word frequencies. '''
+    # if we don't have an existing pickle file, create it
+    if not os.path.exists('wordfreqs.pickle'):
+        with open('wordfreqs.pickle', 'wb') as wordfreqs:
+            pickle.dump(dict(), wordfreqs, protocol=4)
+    
     word_count = 0
+    with open('wordfreqs.pickle', 'rb') as wordfreqs:
+        word_freqs = pickle.load(wordfreqs)
     for word in re.findall(r'[a-zA-Z0-9]+', text):
+        word = word.lower()
         word_count += 1
+        if word not in word_freqs:
+            word_freqs[word] = 0
+        word_freqs[word] += 1
+    with open('wordfreqs.pickle', 'wb') as wordfreqs:
+        pickle.dump(word_freqs, wordfreqs, protocol=4)
     return word_count
 
 def is_valid(url):
@@ -47,12 +62,12 @@ def is_valid(url):
         if not any(domain in parsed.netloc for domain in valid_domains):
             return False
 
-        robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
+        ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
         robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
         robot_parser.read() # read in the robot.txt file 
 
         if(robot_parser.can_fetch("*", url) == False): # if the crawler is not allowed to crawl the site return False
-            return False
+            return False '''
 
         return not re.match(
             r".*\.|\/(css|js|bmp|gif|jpe?g|ico" # changed this line to check for either a '.' or a '/' instead
