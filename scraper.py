@@ -16,8 +16,8 @@ def extract_next_links(url, resp):
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
         if len(text)/len(resp.raw_response.content) > .05:
             num_words = count_words(text)
-            with open('urls.txt', 'w') as urls:
-                urls.write(f"{url} -> {num_words}")
+            with open('urls.txt', 'a') as urls:
+                urls.write(f"{url} -> {num_words}\n")
             return [urllib.parse.urldefrag(link.get('href')).url for link in soup.find_all('a')]
             
             # OLD RETURN STATEMENT DOES NOT REMOVE FRAGMENTS
