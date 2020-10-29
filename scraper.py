@@ -9,18 +9,28 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    # VERY BASIC IMPLEMENTATION, only for testing
-
     # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS 'text/html'
     if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text/html'):
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+        text = soup.get_text()
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
-        if len(soup.get_text())/len(resp.raw_response.content) > .05:
+        if len(text)/len(resp.raw_response.content) > .05:
+            num_words = count_words(text)
+            with open('urls.txt', 'w') as urls:
+                urls.write(f"{url} -> {num_words}")
             return [urllib.parse.urldefrag(link.get('href')).url for link in soup.find_all('a')]
             
             # OLD RETURN STATEMENT DOES NOT REMOVE FRAGMENTS
             #return [link.get('href') for link in soup.find_all('a')]
     return []
+
+def count_words(text: str) -> int:
+    ''' Given a string of text, counts the amount of words in the text (word being
+        defined by the tokenizer) and modifies our stored word frequencies. '''
+    word_count = 0
+    for word in re.findall(r'[a-zA-Z0-9]+', text):
+        word_count += 1
+    return word_count
 
 def is_valid(url):
     try:
