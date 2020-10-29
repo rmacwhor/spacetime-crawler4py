@@ -12,7 +12,7 @@ def scraper(url, resp):
 
 def extract_next_links(url, resp):
     # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS 'text/html'
-    if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text/html'):
+    if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text'):
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
