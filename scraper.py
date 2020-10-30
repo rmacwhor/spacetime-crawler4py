@@ -36,34 +36,35 @@ def extract_next_links(url, resp):
                     link = urllib.parse.urldefrag(link).url.rstrip('/')
                     parsed_link = urlparse(link)
                     # if the link has a netloc, it's a direct link
-                    # therefore, add it directly
                     if parsed_link.netloc:
-                        link_to_append = link
+                        # if it starts with '//', it needs scheme added
+                        if link.startswith('//'):
+                            link_to_append = 'https:' + link
+                        else:
+                            link_to_append = link
                     # otherwise, it's a relative link (a path)
                     else:
-                        # trim leading/trailing slashes for easy urljoin
+                        # trim leading/trailing slash for easier parsing
                         url_path = parsed_link.path.lstrip('/').rstrip('/')
                         # wacky regex to test if path ends with extension
                         if re.match(r"\/*\.[^\.\/]*$", url_path):
-                            # if path ends with an extension, assume url's path important
-                            # if link also has extension, only swap the extensions for path
-                            if re.match(r"\/*\.[^\.\/]*$", link):
-                                link_to_append = urllib.parse.urljoin(link, url_path)
+                            # if path ends with an extension
+                            # -if link also has extension, only swap the extensions for path
+                            if re.match(r"\/*\.[^\.\/]*$", url):
+                                link_to_append = urllib.parse.urljoin(url, url_path)
                             # otherwise, add file to end of link path (/ is important!)
                             else:
-                                link_to_append = urllib.parse.urljoin(link + '/', url_path)
-                        # if path doesn't end with extension, assume url's path *not* important
-                        # add url_path to end of url
+                                link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                        # check for infinite trap
+                        elif url.endswith(url_path):
+                            link_to_append = url
                         else:
-                            url_scheme, url_netloc = urlparse(url).scheme, urlparse(url).netloc
-                            link_to_append = urllib.parse.urljoin(url_scheme + '://' + url_netloc + '/', url_path)
-                            
-                    next_links.append(link_to_append)
+                            link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                    # strip link of whitespace (can sometimes cause EOFError in download.py)        
+                    next_links.append(link_to_append.strip())
                 
         return next_links
-            
-            # OLD RETURN STATEMENT DOES NOT REMOVE FRAGMENTS
-            #return [link.get('href') for link in soup.find_all('a')]
+    # if the URL is not safe to crawl, don't extract any links from it
     return []
 
 def count_words(text: str) -> int:
