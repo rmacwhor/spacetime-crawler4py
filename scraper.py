@@ -35,21 +35,31 @@ def extract_next_links(url, resp):
                 if link != None:
                     link = urllib.parse.urldefrag(link).url.rstrip('/')
                     parsed_link = urlparse(link)
-                    # if the link has a netloc, add it directly
+                    # if the link has a netloc, it's a direct link
+                    # therefore, add it directly
                     if parsed_link.netloc:
-                        next_links.append(link)
-                    # otherwise, treat it as a path and join it to the given url
-                    # UNLESS end path is already the same (could result in infinite trap)
+                        link_to_append = link
+                    # otherwise, it's a relative link (a path)
                     else:
                         # trim leading/trailing slashes for easy urljoin
                         url_path = parsed_link.path.lstrip('/').rstrip('/')
-                        if not url.endswith(url_path):
-                            # if there's a . in the url.path, we're at the "end" of a path (.html)
-                            # the '/' determines whether we append a new path to the URL
-                            # or change the last section of path
-                            url = url if '.' in url_path else url + '/'
-                            joined_url = urllib.parse.urljoin(url, url_path)
-                            next_links.append(joined_url) 
+                        # wacky regex to test if path ends with extension
+                        if re.match(r"\/*\.[^\.\/]*$", url_path):
+                            # if path ends with an extension, assume link's path important
+                            # if link also has extension, only swap the extensions for path
+                            if re.match(r"\/*\.[^\.\/]*$", link):
+                                link_to_append = urllib.parse.urljoin(link, url_path)
+                            # otherwise, add file to end of link path (/ is important!)
+                            else:
+                                link_to_append = urllib.parse.urljoin(link + '/', url_path)
+                        # if path doesn't end with extension, assume link's path *not* important
+                        # add url_path to end of link's netloc
+                        else:
+                            link_to_append = urllib.parse.urljoin(parsed_link.scheme + '://' + parsed_link.netloc + '/',
+                                                                  url_path)
+                            
+                    next_links.append(link_to_append)
+                
         return next_links
             
             # OLD RETURN STATEMENT DOES NOT REMOVE FRAGMENTS
