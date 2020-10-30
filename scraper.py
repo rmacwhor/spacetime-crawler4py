@@ -86,7 +86,7 @@ def is_valid(url):
 
         if ('today.uci.edu' in parsed.netloc and 'department/information_computer_sciences' not in parsed.path):
             return False
-        valid_domains = ['ics.uci.edu', 'cs.uci.edu', 'informatics.uci.edu', 'stat.uci.edu']
+        valid_domains = ['.ics.uci.edu', '.cs.uci.edu', '.informatics.uci.edu', '.stat.uci.edu']
 
         # if the url's domain doesn't include any of these valid domains
         if not any(domain in parsed.netloc for domain in valid_domains):
