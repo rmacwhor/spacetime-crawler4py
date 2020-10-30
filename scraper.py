@@ -24,23 +24,24 @@ def extract_next_links(url, resp):
             for link in soup.find_all('a'):
                 # defrag it and remove trailing slash
                 link = link.get('href')
-                link = urllib.parse.urldefrag(link).url.rstrip('/')
-                parsed_link = urlparse(link)
-                # if the link has a netloc, add it directly
-                if parsed_link.netloc:
-                    next_links.append(link)
-                # otherwise, treat it as a path and join it to the given url
-                # UNLESS end path is already the same (could result in infinite trap)
-                else:
-                    # trim leading/trailing slashes for easy urljoin
-                    url_path = parsed_link.path.lstrip('/').rstrip('/')
-                    if not url.endswith(url_path):
-                        # if there's a . in the url.path, we're at the "end" of a path (.html)
-                        # the '/' determines whether we append a new path to the URL
-                        # or change the last section of path
-                        url = url if '.' in url_path else url + '/'
-                        joined_url = urllib.parse.urljoin(url, url_path)
-                        next_links.append(joined_url) 
+                if link != None:
+                    link = urllib.parse.urldefrag(link).url.rstrip('/')
+                    parsed_link = urlparse(link)
+                    # if the link has a netloc, add it directly
+                    if parsed_link.netloc:
+                        next_links.append(link)
+                    # otherwise, treat it as a path and join it to the given url
+                    # UNLESS end path is already the same (could result in infinite trap)
+                    else:
+                        # trim leading/trailing slashes for easy urljoin
+                        url_path = parsed_link.path.lstrip('/').rstrip('/')
+                        if not url.endswith(url_path):
+                            # if there's a . in the url.path, we're at the "end" of a path (.html)
+                            # the '/' determines whether we append a new path to the URL
+                            # or change the last section of path
+                            url = url if '.' in url_path else url + '/'
+                            joined_url = urllib.parse.urljoin(url, url_path)
+                            next_links.append(joined_url) 
         return next_links
             
             # OLD RETURN STATEMENT DOES NOT REMOVE FRAGMENTS
