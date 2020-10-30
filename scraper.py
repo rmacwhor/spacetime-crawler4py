@@ -11,10 +11,16 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS text
-    # but also be wary that some sites don't have 'content-type' in header...
-    if resp.raw_response and 'content-type' in resp.raw_response.headers\
-       and resp.raw_response.headers['Content-Type'].startswith('text'):
+    # safe_to_crawl is a large boolean expression that determines
+    # whether we should crawl a link. It checks for the following:
+    # there is actually a raw_response (handles 404 and similar errors)
+    # the site has 'content-type' in its headers
+    # the site is in a text format
+    # the site does not redirect anywhere invalid (could be a malicious redirect)
+    safe_to_crawl = (resp.raw_response and 'content-type' in resp.raw_response.headers
+                     and resp.raw_response.headers['Content-Type'].startswith('text')
+                     and is_valid(resp.raw_response.url))
+    if safe_to_crawl:
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
