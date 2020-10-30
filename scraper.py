@@ -45,18 +45,18 @@ def extract_next_links(url, resp):
                         url_path = parsed_link.path.lstrip('/').rstrip('/')
                         # wacky regex to test if path ends with extension
                         if re.match(r"\/*\.[^\.\/]*$", url_path):
-                            # if path ends with an extension, assume link's path important
+                            # if path ends with an extension, assume url's path important
                             # if link also has extension, only swap the extensions for path
                             if re.match(r"\/*\.[^\.\/]*$", link):
                                 link_to_append = urllib.parse.urljoin(link, url_path)
                             # otherwise, add file to end of link path (/ is important!)
                             else:
                                 link_to_append = urllib.parse.urljoin(link + '/', url_path)
-                        # if path doesn't end with extension, assume link's path *not* important
-                        # add url_path to end of link's netloc
+                        # if path doesn't end with extension, assume url's path *not* important
+                        # add url_path to end of url
                         else:
-                            link_to_append = urllib.parse.urljoin(parsed_link.scheme + '://' + parsed_link.netloc + '/',
-                                                                  url_path)
+                            url_scheme, url_netloc = urlparse(url).scheme, urlparse(url).netloc
+                            link_to_append = urllib.parse.urljoin(url_scheme + '://' + url_netloc + '/', url_path)
                             
                     next_links.append(link_to_append)
                 
