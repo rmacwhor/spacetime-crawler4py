@@ -11,8 +11,10 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS 'text/html'
-    if resp.raw_response and resp.raw_response.headers['Content-Type'].startswith('text'):
+    # ADDED CONDITION TO CHECK IF CONTENT-TYPE IS text
+    # but also be wary that some sites don't have 'content-type' in header...
+    if resp.raw_response and 'content-type' in resp.raw_response.headers\
+       and resp.raw_response.headers['Content-Type'].startswith('text'):
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
         # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
