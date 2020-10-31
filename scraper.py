@@ -17,9 +17,10 @@ def extract_next_links(url, resp):
     # the site has 'content-type' in its headers
     # the site is in a text format
     # the site does not redirect anywhere invalid (could be a malicious redirect)
+    # the response status is successful (200-299)
     safe_to_crawl = (resp.raw_response and 'content-type' in resp.raw_response.headers
                      and resp.raw_response.headers['Content-Type'].startswith('text')
-                     and is_valid(resp.raw_response.url))
+                     and is_valid(resp.raw_response.url) and 200 <= resp.status <= 299)
     if safe_to_crawl:
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
