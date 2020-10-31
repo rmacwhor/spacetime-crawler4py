@@ -34,7 +34,7 @@ def extract_next_links(url, resp):
                 # defrag it and remove trailing slash
                 link = link.get('href')
                 if link != None:
-                    link = urllib.parse.urldefrag(link)
+                    link = urllib.parse.urldefrag(link).url
                     parsed_link = urlparse(link)
                     # if the link has a netloc, it's a direct link
                     if parsed_link.netloc:
@@ -45,18 +45,20 @@ def extract_next_links(url, resp):
                             link_to_append = link
                     # otherwise, it's a relative link (a path)
                     else:
-                        # trim trailing slash for easier parsing
                         url_path = parsed_link.path
-                        # wacky regex to test if path ends with extension
                         # if the path starts with a '/', it's relative to the main domain
                         if url_path.startswith('/'):
                             parsedurl = urlparse(url)
                             link_to_append = urllib.parse.urljoin(parsedurl.scheme + '://' + parsedurl.netloc,
                                                                   url_path)
-                            # otherwise, add file to end of link path (/ is important!)
                         # if not, path is relative to the full URL, so add it to end
+                        # if we're in a directory and not at a file, we need a '/' to delve deeper
                         else:
-                            link_to_append = urllib.parse.urljoin(url, url_path)
+                            # wacky regex to test if URL parameter ends with extension (i.e. it's a file)
+                            if re.search(r"\/*\.[^\.\/]*$", url):
+                                link_to_append = urllib.parse.urljoin(url, url_path)
+                            else:
+                                link_to_append = urllib.parse.urljoin(url + '/', url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
                     next_links.append(link_to_append.strip())
                 
