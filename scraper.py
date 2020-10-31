@@ -34,7 +34,7 @@ def extract_next_links(url, resp):
                 # defrag it and remove trailing slash
                 link = link.get('href')
                 if link != None:
-                    link = urllib.parse.urldefrag(link).url.rstrip('/')
+                    link = urllib.parse.urldefrag(link)
                     parsed_link = urlparse(link)
                     # if the link has a netloc, it's a direct link
                     if parsed_link.netloc:
@@ -46,7 +46,7 @@ def extract_next_links(url, resp):
                     # otherwise, it's a relative link (a path)
                     else:
                         # trim trailing slash for easier parsing
-                        url_path = parsed_link.path.rstrip('/')
+                        url_path = parsed_link.path
                         # wacky regex to test if path ends with extension
                         # if the path starts with a '/', it's relative to the main domain
                         if url_path.startswith('/'):
@@ -56,7 +56,7 @@ def extract_next_links(url, resp):
                             # otherwise, add file to end of link path (/ is important!)
                         # if not, path is relative to the full URL, so add it to end
                         else:
-                            link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                            link_to_append = urllib.parse.urljoin(url, url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
                     next_links.append(link_to_append.strip())
                 
