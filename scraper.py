@@ -45,17 +45,16 @@ def extract_next_links(url, resp):
                             link_to_append = link
                     # otherwise, it's a relative link (a path)
                     else:
-                        # trim leading/trailing slash for easier parsing
-                        url_path = parsed_link.path.lstrip('/').rstrip('/')
+                        # trim trailing slash for easier parsing
+                        url_path = parsed_link.path.rstrip('/')
                         # wacky regex to test if path ends with extension
-                        if re.match(r"\/*\.[^\.\/]*$", url_path):
-                            # if path ends with an extension
-                            # -if link also has extension, only swap the extensions for path
-                            if re.match(r"\/*\.[^\.\/]*$", url):
-                                link_to_append = urllib.parse.urljoin(url, url_path)
+                        # if the path starts with a '/', it's relative to the main domain
+                        if url_path.startswith('/'):
+                            parsedurl = urlparse(url)
+                            link_to_append = urllib.parse.urljoin(parsedurl.scheme + '://' + parsedurl.netloc,
+                                                                  url_path)
                             # otherwise, add file to end of link path (/ is important!)
-                            else:
-                                link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                        # if not, path is relative to the full URL, so add it to end
                         else:
                             link_to_append = urllib.parse.urljoin(url + '/', url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
@@ -108,8 +107,6 @@ def is_valid(url):
             if part in directories:
                 return False
             directories.add(part)
-        # temporary fix until we find something better
-        if len(directories) > 7: return False
         
 
         ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
