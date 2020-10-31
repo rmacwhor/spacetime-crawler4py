@@ -56,9 +56,6 @@ def extract_next_links(url, resp):
                             # otherwise, add file to end of link path (/ is important!)
                             else:
                                 link_to_append = urllib.parse.urljoin(url + '/', url_path)
-                        # check for infinite trap
-                        elif url.endswith(url_path):
-                            link_to_append = url
                         else:
                             link_to_append = urllib.parse.urljoin(url + '/', url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
@@ -103,6 +100,15 @@ def is_valid(url):
         # if the url's domain doesn't include any of these valid domains
         if not any(domain in parsed.netloc for domain in valid_domains):
             return False
+
+        # infinite trap checker: split the path by slashes and put into a set
+        # if any part of the path appears more than once, it's probably an infinite trap
+        directories = set()
+        for part in parsed.path.strip('/').split('/'):
+            if part in directories:
+                return False
+            directories.add(part)
+        
 
         ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
         robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
