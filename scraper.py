@@ -108,6 +108,8 @@ def is_valid(url):
             if part in directories:
                 return False
             directories.add(part)
+        # temporary fix until we find something better
+        if len(directories) > 7: return False
         
 
         ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
