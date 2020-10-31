@@ -109,7 +109,9 @@ def is_valid(url):
             if part in directories:
                 return False
             directories.add(part)
-        
+
+        # fix your spam bot evoke >:(
+        if 'replytocom' in parsed.query: return False
 
         ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
         robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
