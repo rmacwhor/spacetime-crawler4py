@@ -35,8 +35,8 @@ def extract_next_links(url, resp):
             for link in soup.find_all('a'):
                 # defrag it and address URL encoding
                 link = link.get('href')
-                link = re.sub(r'%7e', '~', link, flags = re.IGNORECASE)
                 if link != None:
+                    link = re.sub(r'%7e', '~', link, flags = re.IGNORECASE)
                     link = urllib.parse.urldefrag(link).url
                     parsed_link = urlparse(link)
                     # if the link has a netloc, it's a direct link
