@@ -55,13 +55,8 @@ def extract_next_links(url, resp):
                             link_to_append = urllib.parse.urljoin(parsedurl.scheme + '://' + parsedurl.netloc,
                                                                   url_path)
                         # if not, path is relative to the full URL, so add it to end
-                        # if we're in a directory and not at a file, we need a '/' to delve deeper
                         else:
-                            # wacky regex to test if URL parameter ends with extension (i.e. it's a file)
-                            if re.search(r"\/*\.[^\.\/]*$", url):
-                                link_to_append = urllib.parse.urljoin(url, url_path)
-                            else:
-                                link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                            link_to_append = urllib.parse.urljoin(url, url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
                     next_links.append(link_to_append.strip())
                 
