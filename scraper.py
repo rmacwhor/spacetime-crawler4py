@@ -22,6 +22,8 @@ def extract_next_links(url, resp):
                      and resp.raw_response.headers['Content-Type'].startswith('text')
                      and is_valid(resp.raw_response.url) and 200 <= resp.status <= 299)
     if safe_to_crawl:
+        if missing_slash(url, resp):
+            url = url + '/'
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
         next_links = []
@@ -55,13 +57,8 @@ def extract_next_links(url, resp):
                             link_to_append = urllib.parse.urljoin(parsedurl.scheme + '://' + parsedurl.netloc,
                                                                   url_path)
                         # if not, path is relative to the full URL, so add it to end
-                        # if we're in a directory and not at a file, we need a '/' to delve deeper
                         else:
-                            # wacky regex to test if URL parameter ends with extension (i.e. it's a file)
-                            if re.search(r"\/*\.[^\.\/]*$", url):
-                                link_to_append = urllib.parse.urljoin(url, url_path)
-                            else:
-                                link_to_append = urllib.parse.urljoin(url + '/', url_path)
+                            link_to_append = urllib.parse.urljoin(url, url_path)
                     # strip link of whitespace (can sometimes cause EOFError in download.py)        
                     next_links.append(link_to_append.strip())
                 
@@ -90,6 +87,16 @@ def count_words(text: str) -> int:
         pickle.dump(word_freqs, wordfreqs, protocol=4)
     return word_count
 
+def missing_slash(url: str, resp) -> bool:
+    # checks whether the url is missing a slash when it should have one
+    if 'location' not in resp.raw_response.headers: return False
+    parsed1 = urlparse(url)
+    parsed2 = urlparse(resp.raw_response.headers['location'])
+    if parsed1.netloc == parsed2.netloc and parsed1.path + '/' == parsed2.path:
+        return True
+    return False
+    
+
 def is_valid(url):
     try:
         parsed = urlparse(url)
@@ -108,8 +115,12 @@ def is_valid(url):
         # infinite trap checker: split the path by slashes and put into a set
         # if any part of the path appears more than once, it's probably an infinite trap
         directories = set()
-        for part in parsed.path.strip('/').split('/'):
+        parts = parsed.path.strip('/').split('/')
+        for part in parts:
             if part in directories:
+                return False
+            
+            if part != parts[-1] and '.' in part:
                 return False
             directories.add(part)
 
