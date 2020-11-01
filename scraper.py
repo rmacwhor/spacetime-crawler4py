@@ -33,8 +33,8 @@ def extract_next_links(url, resp):
             with open('urls.txt', 'a') as urls:
                 urls.write(f"{url} -> {num_words}\n")
             for link in soup.find_all('a'):
-                # defrag it and remove trailing slash
-                link = link.get('href')
+                # defrag it and address URL encoding
+                link = link.get('href').replace('%7E', '~')
                 if link != None:
                     link = urllib.parse.urldefrag(link).url
                     parsed_link = urlparse(link)
@@ -133,15 +133,12 @@ def is_valid(url):
         if(robot_parser.can_fetch("*", url) == False): # if the crawler is not allowed to crawl the site return False
             return False '''
 
-        return not re.match(
-            r".*\.(css|js|bmp|gif|jpe?g|ico"
-            + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
-            + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
-            + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz|java|class|py|cp?|h|lif)$", parsed.path.lower())
+        # if the URL ends with an extension, check to make sure it's a valid file-type to read
+        if re.search(r"\/*\.[^\.\/]*$", parsed.path.lower()):
+            return re.match(
+                r".*\.(htm|html|php|txt)$", parsed.path.lower())
+            
+        return True
 
     except TypeError:
         print ("TypeError for ", parsed)
