@@ -24,9 +24,9 @@ def extract_next_links(url, resp):
     if safe_to_crawl:
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
-        # TEXT TO CONTENT RATIO CHECK TO AVOID GRABBING LINKS FROM SEMI-EMPTY PAGES
         next_links = []
-        if len(text)/len(resp.raw_response.content) > .05:
+        # ignore pages with low informational content (based on text)
+        if len(text)/len(resp.raw_response.content) > .06 and len(text) >= 1000:
             num_words = count_words(text)
             with open('urls.txt', 'a') as urls:
                 urls.write(f"{url} -> {num_words}\n")
@@ -43,6 +43,9 @@ def extract_next_links(url, resp):
                             link_to_append = 'https:' + link
                         else:
                             link_to_append = link
+                    # if there's an '@' in the link, it's an e-mail, so ignore it
+                    elif '@' in link:
+                        link_to_append = url # better than an empty string
                     # otherwise, it's a relative link (a path)
                     else:
                         url_path = parsed_link.path
@@ -128,7 +131,7 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz|java|class|py|cp?|h|lif)$", parsed.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed)
