@@ -22,7 +22,7 @@ def extract_next_links(url, resp):
                      and resp.raw_response.headers['Content-Type'].startswith('text')
                      and is_valid(resp.raw_response.url) and 200 <= resp.status <= 299)
     if safe_to_crawl:
-        if missing_slash(url, resp):
+        if missing_slash(url, resp.raw_response.url):
             url = url + '/'
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         text = soup.get_text()
@@ -87,11 +87,10 @@ def count_words(text: str) -> int:
         pickle.dump(word_freqs, wordfreqs, protocol=4)
     return word_count
 
-def missing_slash(url: str, resp) -> bool:
+def missing_slash(url: str, resp_url: str) -> bool:
     # checks whether the url is missing a slash when it should have one
-    if 'location' not in resp.raw_response.headers: return False
     parsed1 = urlparse(url)
-    parsed2 = urlparse(resp.raw_response.headers['location'])
+    parsed2 = urlparse(resp_url)
     if parsed1.netloc == parsed2.netloc and parsed1.path + '/' == parsed2.path:
         return True
     return False
