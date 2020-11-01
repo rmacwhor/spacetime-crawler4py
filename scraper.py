@@ -2,7 +2,7 @@ import re
 from urllib.parse import urlparse
 import urllib
 from bs4 import BeautifulSoup
-import urllib.robotparser # Import for robots.txt implmentation
+from collections import defaultdict
 import pickle
 import os.path
 
@@ -34,7 +34,8 @@ def extract_next_links(url, resp):
                 urls.write(f"{url} -> {num_words}\n")
             for link in soup.find_all('a'):
                 # defrag it and address URL encoding
-                link = link.get('href').replace('%7E', '~')
+                link = link.get('href')
+                link = re.sub(r'%7e', '~', link, flags = re.IGNORECASE)
                 if link != None:
                     link = urllib.parse.urldefrag(link).url
                     parsed_link = urlparse(link)
@@ -72,7 +73,7 @@ def count_words(text: str) -> int:
     # if we don't have an existing pickle file, create it
     if not os.path.exists('wordfreqs.pickle'):
         with open('wordfreqs.pickle', 'wb') as wordfreqs:
-            pickle.dump(dict(), wordfreqs, protocol=4)
+            pickle.dump(defaultdict(int), wordfreqs, protocol=4)
     
     word_count = 0
     with open('wordfreqs.pickle', 'rb') as wordfreqs:
@@ -80,8 +81,6 @@ def count_words(text: str) -> int:
     for word in re.findall(r'[a-zA-Z0-9]+', text):
         word = word.lower()
         word_count += 1
-        if word not in word_freqs:
-            word_freqs[word] = 0
         word_freqs[word] += 1
     with open('wordfreqs.pickle', 'wb') as wordfreqs:
         pickle.dump(word_freqs, wordfreqs, protocol=4)
@@ -118,20 +117,13 @@ def is_valid(url):
         for part in parts:
             if part in directories:
                 return False
-            
+            # there should only be a file at the end of a path
             if part != parts[-1] and '.' in part:
                 return False
             directories.add(part)
 
         # fix your spam bot evoke >:(
         if 'replytocom' in parsed.query: return False
-
-        ''' robot_parser = urllib.robotparser.RobotFileParser() # robotparser object to parse the robots.txt file
-        robot_parser.set_url(parsed.scheme + "://" + parsed.netloc + "/robots.txt") # set the url to include "robots.txt" at the end
-        robot_parser.read() # read in the robot.txt file 
-
-        if(robot_parser.can_fetch("*", url) == False): # if the crawler is not allowed to crawl the site return False
-            return False '''
 
         # if the URL ends with an extension, check to make sure it's a valid file-type to read
         if re.search(r"\/*\.[^\.\/]*$", parsed.path.lower()):
