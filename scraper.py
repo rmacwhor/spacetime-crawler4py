@@ -102,12 +102,13 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
 
-        if ('today.uci.edu' in parsed.netloc and 'department/information_computer_sciences' not in parsed.path):
-            return False
-        valid_domains = ['.ics.uci.edu', '.cs.uci.edu', '.informatics.uci.edu', '.stat.uci.edu']
+        valid_domains = ['today.uci.edu', '.ics.uci.edu', '.cs.uci.edu', '.informatics.uci.edu', '.stat.uci.edu']
 
         # if the url's domain doesn't include any of these valid domains
         if not any(domain in parsed.netloc for domain in valid_domains):
+            return False
+
+        if ('today.uci.edu' in parsed.netloc and 'department/information_computer_sciences' not in parsed.path):
             return False
 
         # infinite trap checker: split the path by slashes and put into a set
